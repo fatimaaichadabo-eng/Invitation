@@ -45,7 +45,7 @@ action supplémentaire de l'invité.
 ## 3. Mise en ligne (GitHub Pages, gratuit)
 
 Dépôt GitHub → **Settings → Pages** → Source : *Deploy from a branch*, choisir la branche et `/ (root)`.
-Le site sera disponible à `https://fatimaaichadabo-eng.github.io/invitation/`.
+Le site sera disponible à `https://fatimaaichadabo-eng.github.io/Invitation/`.
 
 Si l'adresse finale est différente, mettez à jour la balise `og:image` dans `index.html`
 (c'est l'image qui apparaît dans l'aperçu du lien sur WhatsApp).
