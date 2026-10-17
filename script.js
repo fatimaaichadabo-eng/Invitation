@@ -14,7 +14,7 @@ const CONFIG = {
   rsvpEndpoint: "https://script.google.com/macros/s/AKfycbyiTAa2-JNwyizhkaVgbVOP3wNTfwJX4QUxnCmYBJRw4jQWvdXxbxIuteh195bpEKa7-A/exec",
 
   // Date et heure de début (heure de Dakar = GMT).
-  date: "2026-10-31T16:30:00Z",
+  date: "2026-10-31T16:00:00Z",
 
   // Lieu
   place: "Maison Madera, Almadies, Dakar",
