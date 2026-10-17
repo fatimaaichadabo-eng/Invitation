@@ -61,7 +61,7 @@ async function openEnvelope() {
 }
 
 function showSite() {
-  sessionStorage.setItem("invitation-opened", "1");
+  try { sessionStorage.setItem("invitation-opened", "1"); } catch (_) {}
   intro.classList.add("is-leaving");
   document.body.classList.remove("is-locked");
   site.removeAttribute("aria-hidden");
@@ -150,9 +150,10 @@ $$("[data-close]", sheet).forEach((el) => el.addEventListener("click", closeShee
 $$(".sheet-option", sheet).forEach((el) => el.addEventListener("click", () => setTimeout(closeSheet, 300)));
 
 // iPhone : on laisse choisir (Plans, Google Maps, Waze). Android / ordinateur : Google Maps directement.
-$("#directions").addEventListener("click", () => {
-  if (isIOS) openSheet();
-  else window.open(links.google, "_blank", "noopener");
+const directions = $("#directions");
+directions.href = links.google;
+directions.addEventListener("click", (e) => {
+  if (isIOS) { e.preventDefault(); openSheet(); }
 });
 $("#other-apps").addEventListener("click", openSheet);
 
@@ -226,7 +227,9 @@ try {
 preload().then(() => {
   $("#loader").classList.add("is-hidden");
   // Si l'invité a déjà ouvert l'enveloppe pendant cette visite (ex : rechargement), on va droit au site.
-  if (sessionStorage.getItem("invitation-opened")) {
+  let seen = false;
+  try { seen = !!sessionStorage.getItem("invitation-opened"); } catch (_) {}
+  if (seen) {
     opened = true;
     intro.remove();
     document.body.classList.remove("is-locked");
