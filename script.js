@@ -4,12 +4,13 @@
 
 /* ------------------ À PERSONNALISER ------------------ */
 const CONFIG = {
-  // Numéro WhatsApp au format international, sans "+" ni espaces (ex : 221771234567).
-  // Utilisé pour l'icône WhatsApp et, si aucun lien Google Sheet n'est renseigné, pour le RSVP.
-  whatsapp: "",
+  // Boutons WhatsApp de la dernière page (numéro international, sans "+" ni espaces).
+  whatsapp: [
+    { name: "Ibrahima", number: "221781101620" },
+    { name: "Fatima", number: "221785469101" },
+  ],
 
-  // Lien de l'application Google Apps Script qui enregistre les réponses dans un Google Sheet
-  // (voir README.md). Laisser vide pour envoyer les réponses par WhatsApp.
+  // Application Google Apps Script qui enregistre les réponses RSVP dans le Google Sheet.
   rsvpEndpoint: "https://script.google.com/macros/s/AKfycbyiTAa2-JNwyizhkaVgbVOP3wNTfwJX4QUxnCmYBJRw4jQWvdXxbxIuteh195bpEKa7-A/exec",
 
   // Date et heure de début (heure de Dakar = GMT).
@@ -17,7 +18,7 @@ const CONFIG = {
 
   // Lieu
   place: "Maison Madera, Almadies, Dakar",
-  // Coordonnées GPS précises (facultatif mais recommandé) : ex. { lat: 14.7449, lng: -17.5126 }
+  // Coordonnées GPS précises (facultatif) : ex. { lat: 14.7449, lng: -17.5126 }
   coords: null,
 };
 /* ----------------------------------------------------- */
@@ -26,15 +27,21 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const root = document.documentElement;
 
 /* ------------------ Préchargement ------------------ */
+const INTRO_IMAGES = [
+  "assets/enveloppe-fermee.webp", "assets/enveloppe-ouverte.webp", "assets/sceau.webp",
+  "assets/dentelle-coin.webp", "assets/dentelle-bordure.webp", "assets/gypsophile.webp", "assets/papier.jpg",
+];
+const LATER_IMAGES = ["assets/notre-jour.webp", "assets/merci.webp"];
+
+const loadImage = (src) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = res; i.src = src; });
+
 function preload() {
-  const images = ["assets/lace-corner.webp"].map(
-    (src) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = res; i.src = src; })
-  );
   const fonts = document.fonts ? document.fonts.ready : Promise.resolve();
-  // On n'attend jamais plus de 4 s, même sur une connexion lente.
-  return Promise.race([Promise.all([...images, fonts]), wait(4000)]);
+  // On n'attend jamais plus de 5 s, même sur une connexion lente.
+  return Promise.race([Promise.all([...INTRO_IMAGES.map(loadImage), fonts]), wait(5000)]);
 }
 
 /* ------------------ Ouverture de l'enveloppe ------------------ */
@@ -48,38 +55,57 @@ async function openEnvelope() {
   opened = true;
   if (navigator.vibrate) navigator.vibrate(18);
 
-  const t = reducedMotion ? 0.2 : 1;
-  envelope.classList.add("is-opening");       // le sceau se brise
-  await wait(650 * t);
-  envelope.classList.add("flap-open");        // le rabat s'ouvre
-  await wait(500 * t);
-  envelope.classList.add("flap-behind");
-  await wait(300 * t);
-  envelope.classList.add("letter-out");       // la lettre glisse vers le haut
-  await wait(1300 * t);
-  showSite();
+  const t = reducedMotion ? 0.15 : 1;
+  envelope.classList.add("is-breaking");     // le sceau se brise
+  await wait(550 * t);
+  envelope.classList.add("is-opening");      // le rabat se soulève…
+  await wait(380 * t);
+  envelope.classList.add("flap-up");         // …et se rabat vers le haut
+  await wait(550 * t);
+  envelope.classList.add("letter-out");      // la lettre glisse hors de l'enveloppe
+  await wait(1900 * t);
+  showSite(true);
 }
 
-function showSite() {
+function showSite(animate) {
   try { sessionStorage.setItem("invitation-opened", "1"); } catch (_) {}
-  intro.classList.add("is-leaving");
-  document.body.classList.remove("is-locked");
+  root.classList.remove("is-locked");
   site.removeAttribute("aria-hidden");
   site.classList.add("is-visible");
   window.scrollTo(0, 0);
-  setTimeout(() => { intro.remove(); }, 1500);
+  if (animate) {
+    intro.classList.add("is-leaving");
+    setTimeout(() => intro.remove(), 1500);
+  } else {
+    intro.remove();
+  }
 }
 
 $("#seal").addEventListener("click", openEnvelope);
 
-/* ------------------ Apparition des sections ------------------ */
+/* ------------------ Pages : apparition et défilement ------------------ */
+const panels = $$(".panel");
+
 const io = new IntersectionObserver(
   (entries) => entries.forEach((e) => {
-    if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target); }
+    if (e.intersectionRatio >= 0.3) e.target.classList.add("is-visible");
+    else if (!e.isIntersecting) e.target.classList.remove("is-visible");
   }),
-  { threshold: 0.18 }
+  { threshold: [0, 0.3] }
 );
-$$(".panel").forEach((p) => io.observe(p));
+panels.forEach((p) => io.observe(p));
+
+// « Faites défiler » en bas de chaque page, sauf la dernière
+const chevron = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+panels.slice(0, -1).forEach((panel, i) => {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "scroll-hint";
+  btn.setAttribute("aria-label", "Page suivante");
+  btn.innerHTML = `<span>Faites défiler</span>${chevron}`;
+  btn.addEventListener("click", () => panels[i + 1].scrollIntoView({ behavior: "smooth" }));
+  panel.appendChild(btn);
+});
 
 /* ------------------ Menu ------------------ */
 const toggle = $("#menu-toggle");
@@ -133,14 +159,14 @@ $("#open-google").href = links.google;
 $("#open-apple").href = links.apple;
 $("#open-waze").href = links.waze;
 
-// Carte intégrée, chargée seulement quand on approche de la section
+// Carte intégrée, chargée seulement à l'approche de la section
 const map = $("#map");
 const mapIO = new IntersectionObserver((entries) => {
   if (entries[0].isIntersecting) {
     map.src = `https://maps.google.com/maps?q=${q}&z=15&output=embed&hl=fr`;
     mapIO.disconnect();
   }
-}, { rootMargin: "400px" });
+}, { rootMargin: "600px" });
 mapIO.observe(map);
 
 const sheet = $("#maps-sheet");
@@ -158,11 +184,18 @@ directions.addEventListener("click", (e) => {
 $("#other-apps").addEventListener("click", openSheet);
 
 /* ------------------ WhatsApp ------------------ */
-const waNumber = CONFIG.whatsapp.replace(/\D/g, "");
-const waLink = (text) => `https://wa.me/${waNumber}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
-const waIcon = $("#whatsapp-link");
-if (waNumber) waIcon.href = waLink("Assalamou aleykoum Ibrahima & Fatima ! ");
-else waIcon.remove();
+const waIcon = $("#wa-icon").content;
+const waBox = $("#wa-buttons");
+CONFIG.whatsapp.forEach(({ name, number }) => {
+  const a = document.createElement("a");
+  a.className = "wa-btn";
+  a.href = `https://wa.me/${number.replace(/\D/g, "")}?text=${encodeURIComponent(`Assalamou aleykoum ${name} ! `)}`;
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.setAttribute("aria-label", `Écrire à ${name} sur WhatsApp`);
+  a.append(waIcon.cloneNode(true), name);
+  waBox.appendChild(a);
+});
 
 /* ------------------ RSVP ------------------ */
 const form = $("#rsvp-form");
@@ -172,11 +205,12 @@ const submitBtn = $("#rsvp-submit");
 const STORAGE_KEY = "rsvp-ibrahima-fatima";
 
 function showDone(entry) {
+  const first = entry.nom.split(" ")[0];
   form.hidden = true;
   done.hidden = false;
   $("#rsvp-done-text").textContent = entry.presence === "Présent(e)"
-    ? `Merci ${entry.nom.split(" ")[0]}, nous avons hâte de vous retrouver le 31 octobre !`
-    : `Merci ${entry.nom.split(" ")[0]} de nous avoir prévenus. Vous serez dans nos cœurs et nos prières.`;
+    ? `Merci ${first}, nous avons hâte de vous retrouver le 31 octobre !`
+    : `Merci ${first} de nous avoir prévenus. Vous serez dans nos cœurs et nos prières.`;
 }
 
 form.addEventListener("submit", async (e) => {
@@ -186,25 +220,18 @@ form.addEventListener("submit", async (e) => {
   if (!nom) { errorEl.textContent = "Merci d’indiquer votre nom et prénom."; form.nom.focus(); return; }
   if (!presence) { errorEl.textContent = "Merci d’indiquer si vous serez présent(e)."; return; }
   errorEl.textContent = "";
-  const entry = { nom, presence, date: new Date().toISOString() };
+  const entry = { nom, presence };
 
-  if (CONFIG.rsvpEndpoint) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Envoi…";
-    try {
-      const body = new URLSearchParams({ nom, presence });
-      await fetch(CONFIG.rsvpEndpoint, { method: "POST", mode: "no-cors", body });
-    } catch (err) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Confirmer ma présence";
-      errorEl.textContent = "L’envoi n’a pas abouti. Vérifiez votre connexion et réessayez.";
-      return;
-    }
-  } else {
-    const msg = presence === "Présent(e)"
-      ? `Assalamou aleykoum ! Je confirme ma présence au mariage d'Ibrahima & Fatima le samedi 31 octobre 2026.\n\nNom : ${nom}`
-      : `Assalamou aleykoum ! Je ne pourrai malheureusement pas être présent(e) au mariage d'Ibrahima & Fatima le 31 octobre 2026.\n\nNom : ${nom}`;
-    window.open(waLink(msg), "_blank", "noopener");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Envoi…";
+  try {
+    // "no-cors" : Google n'autorise pas la lecture de la réponse, mais la ligne est bien ajoutée.
+    await fetch(CONFIG.rsvpEndpoint, { method: "POST", mode: "no-cors", body: new URLSearchParams(entry) });
+  } catch (err) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Confirmer ma présence";
+    errorEl.textContent = "L’envoi n’a pas abouti. Vérifiez votre connexion internet et réessayez.";
+    return;
   }
 
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entry)); } catch (_) {}
@@ -226,16 +253,10 @@ try {
 /* ------------------ Démarrage ------------------ */
 preload().then(() => {
   $("#loader").classList.add("is-hidden");
+  LATER_IMAGES.forEach(loadImage);
   // Si l'invité a déjà ouvert l'enveloppe pendant cette visite (ex : rechargement), on va droit au site.
   let seen = false;
   try { seen = !!sessionStorage.getItem("invitation-opened"); } catch (_) {}
-  if (seen) {
-    opened = true;
-    intro.remove();
-    document.body.classList.remove("is-locked");
-    site.removeAttribute("aria-hidden");
-    site.classList.add("is-visible");
-  } else {
-    requestAnimationFrame(() => intro.classList.add("is-ready"));
-  }
+  if (seen) { opened = true; showSite(false); }
+  else requestAnimationFrame(() => intro.classList.add("is-ready"));
 });

@@ -10,37 +10,29 @@ Fichiers : `index.html` (contenu), `style.css` (design), `script.js` (animations
 
 ```js
 const CONFIG = {
-  whatsapp: "221XXXXXXXXX",   // votre numéro, sans + ni espaces
-  rsvpEndpoint: "",           // lien Google Sheet (étape 2), facultatif
-  coords: null,               // ex. { lat: 14.74, lng: -17.51 } pour un itinéraire précis
+  whatsapp: [ { name: "Ibrahima", number: "221781101620" }, { name: "Fatima", number: "221785469101" } ],
+  rsvpEndpoint: "https://script.google.com/macros/s/…/exec",  // Google Sheet des réponses
+  coords: null,   // ex. { lat: 14.74, lng: -17.51 } pour un itinéraire précis
 };
 ```
 
-- Sans `whatsapp`, l'icône WhatsApp de la dernière page est masquée.
-- Pour `coords` : sur Google Maps, faites un appui long sur la Maison Madera et copiez les deux nombres affichés.
+## 2. Réponses RSVP (Google Sheet)
 
-## 2. Réception des réponses RSVP
+Chaque réponse ajoute une ligne `Date | Nom et prénom | Présence` au Google Sheet relié au script
+Apps Script ci-dessous (Extensions → Apps Script, déployé en « Application Web », accès « Tout le monde ») :
 
-**Option A : WhatsApp (rien à configurer).** Si `rsvpEndpoint` est vide, le bouton
-« Confirmer ma présence » ouvre WhatsApp avec un message déjà rédigé vers votre numéro.
-L'invité doit encore appuyer sur « Envoyer ».
+```js
+function doPost(e) {
+  SpreadsheetApp.getActiveSpreadsheet().getSheets()[0]
+    .appendRow([new Date(), e.parameter.nom, e.parameter.presence]);
+  return ContentService.createTextOutput("ok");
+}
+```
 
-**Option B : Google Sheet (recommandé).** Toutes les réponses arrivent dans un seul tableau, sans
-action supplémentaire de l'invité.
+## Images (`assets/`)
 
-1. Créez un Google Sheet, ligne 1 : `Date | Nom | Présence`.
-2. Menu **Extensions → Apps Script**, remplacez le code par :
-
-   ```js
-   function doPost(e) {
-     SpreadsheetApp.getActiveSpreadsheet().getSheets()[0]
-       .appendRow([new Date(), e.parameter.nom, e.parameter.presence]);
-     return ContentService.createTextOutput("ok");
-   }
-   ```
-3. **Déployer → Nouveau déploiement → Application Web**, « Exécuter en tant que : moi »,
-   « Accès : Tout le monde ». Autorisez, puis copiez l'URL (`https://script.google.com/macros/s/…/exec`).
-4. Collez-la dans `rsvpEndpoint`.
+`enveloppe-fermee.webp` et `enveloppe-ouverte.webp` partagent le même cadre (1516 × 1478 à l'origine) pour
+que le rabat s'ouvre sans saut ; les découpes de l'animation dans `style.css` dépendent de ce cadre.
 
 ## 3. Mise en ligne (GitHub Pages, gratuit)
 
