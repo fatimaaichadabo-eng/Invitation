@@ -24,13 +24,23 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* La page elle-même ne défile pas : les pages défilent dans <main>, un cadre fixe de la taille
+   de l'écran. Ainsi la barre d'adresse de Safari ne se replie pas et chaque page garde
+   exactement la hauteur de l'écran. */
+html, body { height: 100%; overflow: hidden; }
 html {
-  scroll-behavior: smooth;
-  scroll-snap-type: y mandatory;
   -webkit-text-size-adjust: 100%;
   background: var(--ivory);
 }
-html.is-locked, html.is-locked body { overflow: hidden; }
+main {
+  position: fixed; inset: 0;
+  overflow-x: hidden; overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+html.is-locked main { overflow: hidden; }
 
 body {
   margin: 0;
@@ -269,8 +279,7 @@ button { font: inherit; color: inherit; }
 
 .panel {
   position: relative;
-  min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 72px 16px 64px;
   overflow: hidden;
@@ -399,7 +408,7 @@ h2 {
   margin: 0 -16px;
 }
 .photo-top img { width: 100%; }
-.photo-top + .panel-inner { margin-top: calc(-0.5 * min(100vw, 640px)); }
+.photo-top + .panel-inner { margin-top: calc(-0.53 * min(100vw, 640px)); }
 .panel-photo .reveal { opacity: 1; }
 .panel-photo .photo-top { opacity: 0; transition: opacity 1.4s ease; }
 .panel-photo.is-visible .photo-top { opacity: 1; }
@@ -630,9 +639,45 @@ h2 {
   h2 { font-size: 26px; }
 }
 
+/* ---------------- Petits écrans (iPhone SE, mini…) ---------------- */
+@media (max-height: 640px) {
+  .panel { padding: 58px 16px 50px; }
+  .ornament { margin: 10px auto; }
+  .bismillah { font-size: min(24px, calc((100vw - 64px) / 14.5)); }
+  .names { font-size: clamp(40px, 11vw, 64px); margin: 2px 0 4px; }
+  .kicker { font-size: 12.5px; }
+  #accueil .kicker { line-height: 1.6; }
+  .hero-date { font-size: 18px; }
+  .hero-sub { font-size: 16px; }
+  .countdown { margin: 8px 0 10px; }
+  .countdown div { min-width: 54px; padding: 4px 4px 3px; }
+  .countdown strong { font-size: 18px; }
+  .countdown span { font-size: 9.5px; }
+  .btn { padding: 11px 22px; }
+  .btn-lg { padding: 14px 26px; }
+  .prose { font-size: 17px; margin-bottom: 12px; }
+  .photo-top + .panel-inner { margin-top: calc(-0.68 * min(100vw, 640px)); }
+  .ornament-flower { display: none; }
+  .scroll-hint { bottom: 6px; }
+  .scroll-hint span { display: none; }
+  #notre-jour .prose { font-size: 16.5px; margin-bottom: 8px; }
+  #notre-jour { padding-bottom: 40px; }
+  .map-frame { aspect-ratio: 2 / 1; margin-bottom: 14px; }
+  .place { margin-bottom: 14px; }
+  .timeline { margin-top: 16px; }
+  .timeline li { padding: 8px 0; }
+  .verse-ar { font-size: 19px; line-height: 1.85; margin-bottom: 10px; }
+  .verse { font-size: 17.5px; line-height: 1.55; }
+  .see-you { font-size: 38px; }
+  .merci-seal { width: 88px; }
+  .script-title { font-size: 54px; }
+  .field input { padding: 13px 0; }
+  .choice span { padding: 11px 8px; }
+}
+
 /* ---------------- Mouvements réduits ---------------- */
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
+  main { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: .01ms !important; animation-iteration-count: 1 !important;
     transition-duration: .2s !important; transition-delay: 0s !important;

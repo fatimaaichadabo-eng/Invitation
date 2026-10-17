@@ -28,6 +28,7 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const root = document.documentElement;
+const scroller = document.querySelector("main");
 
 /* ------------------ Préchargement ------------------ */
 const INTRO_IMAGES = [
@@ -72,7 +73,7 @@ function showSite(animate) {
   root.classList.remove("is-locked");
   site.removeAttribute("aria-hidden");
   site.classList.add("is-visible");
-  window.scrollTo(0, 0);
+  scroller.scrollTo(0, 0);
   if (animate) {
     intro.classList.add("is-leaving");
     setTimeout(() => intro.remove(), 1500);
@@ -91,7 +92,7 @@ const io = new IntersectionObserver(
     if (e.intersectionRatio >= 0.3) e.target.classList.add("is-visible");
     else if (!e.isIntersecting) e.target.classList.remove("is-visible");
   }),
-  { threshold: [0, 0.3] }
+  { root: scroller, threshold: [0, 0.3] }
 );
 panels.forEach((p) => io.observe(p));
 
@@ -166,7 +167,7 @@ const mapIO = new IntersectionObserver((entries) => {
     map.src = `https://maps.google.com/maps?q=${q}&z=15&output=embed&hl=fr`;
     mapIO.disconnect();
   }
-}, { rootMargin: "600px" });
+}, { root: scroller, rootMargin: "600px" });
 mapIO.observe(map);
 
 const sheet = $("#maps-sheet");
