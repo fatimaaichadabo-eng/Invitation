@@ -203,7 +203,8 @@ const form = $("#rsvp-form");
 const done = $("#rsvp-done");
 const errorEl = $("#rsvp-error");
 const submitBtn = $("#rsvp-submit");
-const STORAGE_KEY = "rsvp-ibrahima-fatima";
+// Les anciennes versions retenaient la réponse sur le téléphone : on efface ce souvenir.
+try { localStorage.removeItem("rsvp-ibrahima-fatima"); } catch (_) {}
 
 function showDone(entry) {
   const first = entry.nom.split(" ")[0];
@@ -235,21 +236,17 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entry)); } catch (_) {}
   showDone(entry);
 });
 
 $("#rsvp-again").addEventListener("click", () => {
+  form.reset();
   done.hidden = true;
   form.hidden = false;
   submitBtn.disabled = false;
   submitBtn.textContent = "Confirmer ma présence";
 });
 
-try {
-  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-  if (saved) { showDone(saved); form.nom.value = saved.nom; }
-} catch (_) {}
 
 /* ------------------ Démarrage ------------------ */
 preload().then(() => {
