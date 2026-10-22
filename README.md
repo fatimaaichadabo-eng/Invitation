@@ -12,7 +12,7 @@ Fichiers : `index.html` (contenu), `style.css` (design), `script.js` (animations
 const CONFIG = {
   whatsapp: [ { name: "Ibrahima", number: "221781101620" }, { name: "Fatima", number: "221785469101" } ],
   rsvpEndpoint: "https://script.google.com/macros/s/…/exec",  // Google Sheet des réponses
-  coords: null,   // ex. { lat: 14.74, lng: -17.51 } pour un itinéraire précis
+  coords: { lat: 14.742158, lng: -17.520318 },   // entrée principale (l itinéraire arrive par devant)
 };
 ```
 

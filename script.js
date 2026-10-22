@@ -19,7 +19,7 @@ const CONFIG = {
   // Lieu
   place: "Maison Madera, Almadies, Dakar",
   // Coordonnées GPS précises (facultatif) : ex. { lat: 14.7449, lng: -17.5126 }
-  coords: null,
+  coords: { lat: 14.742158, lng: -17.520318 },   // entrée principale de la Maison Madera
 };
 /* ----------------------------------------------------- */
 
@@ -145,7 +145,8 @@ if (tick()) { const timer = setInterval(() => { if (!tick()) clearInterval(timer
 const ua = navigator.userAgent;
 const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const dest = CONFIG.coords ? `${CONFIG.coords.lat},${CONFIG.coords.lng}` : CONFIG.place;
-const q = encodeURIComponent(dest);
+// Coordonnées laissées telles quelles (virgule non encodée) : Waze et Plans les lisent mieux ainsi.
+const q = CONFIG.coords ? dest : encodeURIComponent(dest);
 
 const links = {
   google: `https://www.google.com/maps/dir/?api=1&destination=${q}`,
@@ -164,7 +165,7 @@ $("#open-waze").href = links.waze;
 const map = $("#map");
 const mapIO = new IntersectionObserver((entries) => {
   if (entries[0].isIntersecting) {
-    map.src = `https://maps.google.com/maps?q=${q}&z=15&output=embed&hl=fr`;
+    map.src = `https://maps.google.com/maps?q=${q}&z=16&output=embed&hl=fr`;
     mapIO.disconnect();
   }
 }, { root: scroller, rootMargin: "600px" });
